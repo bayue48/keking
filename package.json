@@ -16,7 +16,7 @@
     "docker:logs": "docker compose logs -f bot"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "keywords": [],
   "author": "",

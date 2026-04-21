@@ -5,10 +5,10 @@ import {
   type InteractionReplyOptions,
 } from "discord.js";
 
-import { config } from "../config.js";
-import { getStoredGuildCount } from "../db/postgres.js";
-import type { SlashCommand } from "../structures/command.js";
-import { createErrorEmbed } from "../utils/embeds.js";
+import { config } from "../../config.js";
+import { getStoredGuildCount } from "../../db/postgres.js";
+import type { SlashCommand } from "../../structures/command.js";
+import { createErrorEmbed } from "../../utils/embeds.js";
 
 function formatUptime(totalSeconds: number): string {
   const days = Math.floor(totalSeconds / 86400);

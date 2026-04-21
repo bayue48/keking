@@ -6,11 +6,11 @@ import {
   type InteractionReplyOptions,
 } from "discord.js";
 
-import { config } from "../config.js";
-import { getGuildRecord, upsertGuild } from "../db/postgres.js";
-import type { SlashCommand } from "../structures/command.js";
-import { deployCommands, formatDeployReport } from "../utils/deploy-commands.js";
-import { createErrorEmbed } from "../utils/embeds.js";
+import { config } from "../../config.js";
+import { getGuildRecord, upsertGuild } from "../../db/postgres.js";
+import type { SlashCommand } from "../../structures/command.js";
+import { deployCommands, formatDeployReport } from "../../utils/deploy-commands.js";
+import { createErrorEmbed } from "../../utils/embeds.js";
 
 export const command: SlashCommand = {
   data: new SlashCommandBuilder()

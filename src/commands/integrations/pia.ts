@@ -6,9 +6,9 @@ import {
   type InteractionReplyOptions,
 } from "discord.js";
 
-import { searchNovels } from "../api/pia.js";
-import type { SlashCommand } from "../structures/command.js";
-import { createErrorEmbed, createInfoEmbed } from "../utils/embeds.js";
+import { searchNovels } from "../../api/pia.js";
+import type { SlashCommand } from "../../structures/command.js";
+import { createErrorEmbed, createInfoEmbed } from "../../utils/embeds.js";
 
 function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
@@ -60,20 +60,27 @@ export const command: SlashCommand = {
         return;
       }
 
-      const embed = [createInfoEmbed({ title: firstNovel.title, description:truncate(firstNovel.description || "No description provided.", 400), fields: [
-        { name: "Author", value: firstNovel.author || "Unknown", inline: true },
-        { name: "Locale", value: firstNovel.locale || "Unknown", inline: true },
-        {
-          name: "Status",
-          value: firstNovel.isComplete ? "Complete" : "Ongoing",
-          inline: true,
-        },
-        { name: "Episodes", value: firstNovel.episodes.toString(), inline: true },
-        { name: "Likes", value: firstNovel.likes.toString(), inline: true },
-        { name: "Views", value: firstNovel.views.toString(), inline: true },
-      ] }).setURL(firstNovel.url).setThumbnail(firstNovel.imageUrl).setFooter({
-        text: firstNovel.tags.length > 0 ? `Tags: ${firstNovel.tags.slice(0, 5).join(", ")}` : "No tags",
-      })];
+      const embed = createInfoEmbed({
+        title: firstNovel.title,
+        description: truncate(firstNovel.description || "No description provided.", 400),
+        fields: [
+          { name: "Author", value: firstNovel.author || "Unknown", inline: true },
+          { name: "Locale", value: firstNovel.locale || "Unknown", inline: true },
+          {
+            name: "Status",
+            value: firstNovel.isComplete ? "Complete" : "Ongoing",
+            inline: true,
+          },
+          { name: "Episodes", value: firstNovel.episodes.toString(), inline: true },
+          { name: "Likes", value: firstNovel.likes.toString(), inline: true },
+          { name: "Views", value: firstNovel.views.toString(), inline: true },
+        ],
+      })
+        .setURL(firstNovel.url)
+        .setThumbnail(firstNovel.imageUrl)
+        .setFooter({
+          text: firstNovel.tags.length > 0 ? `Tags: ${firstNovel.tags.slice(0, 5).join(", ")}` : "No tags",
+        });
 
       const moreResults = otherNovels
         .slice(0, 4)
@@ -81,7 +88,7 @@ export const command: SlashCommand = {
         .join("\n");
 
       if (moreResults) {
-        embed[0]?.addFields({
+        embed.addFields({
           name: "More Results",
           value: moreResults,
         });
@@ -90,11 +97,11 @@ export const command: SlashCommand = {
       const updatedAt = firstNovel.updatedAt ? toDate(firstNovel.updatedAt) : null;
 
       if (updatedAt) {
-        embed[0]?.setTimestamp(updatedAt);
+        embed.setTimestamp(updatedAt);
       }
 
       const reply: InteractionEditReplyOptions = {
-        embeds: embed,
+        embeds: [embed],
       };
 
       if (firstNovel.isAdult) {
