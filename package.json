@@ -10,6 +10,7 @@
     "check": "pnpm build",
     "start": "node --enable-source-maps dist/index.js",
     "deploy:commands": "tsx src/deploy-commands.ts",
+    "deploy:clear-commands": "tsx src/clear-commands.ts",
     "docker:build": "docker build -t keking-bot .",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",

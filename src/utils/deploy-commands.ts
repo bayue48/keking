@@ -80,6 +80,15 @@ export async function deployCommands(options: DeployCommandsOptions = {}): Promi
   };
 }
 
+export async function clearCommands(guildId?: string | null): Promise<void> {
+  const rest = new REST({ version: "10" }).setToken(config.token);
+  const route = guildId
+    ? Routes.applicationGuildCommands(config.clientId, guildId)
+    : Routes.applicationCommands(config.clientId);
+
+  await rest.put(route, { body: [] });
+}
+
 export function formatDeployReport(result: DeployCommandsResult, guildId?: string | null): string {
   const target = guildId ? `guild ${guildId}` : "global scope";
 

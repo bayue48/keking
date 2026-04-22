@@ -6,7 +6,8 @@ if (config.databaseUrl) {
   await initializeGuildStorage();
 }
 
-const resolvedGuildId = config.guildId;
+// if config.guildId is set, deploy to that guild; otherwise deploy globally
+const resolvedGuildId = config.guildId ? config.guildId : null;
 let deployResult = { count: 0, skipped: false, hash: "", commandNames: [] as string[] };
 
 try {

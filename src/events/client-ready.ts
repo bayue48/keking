@@ -1,7 +1,6 @@
 import { Events, type Client } from "discord.js";
 
 import { config } from "../config.js";
-import { upsertGuild } from "../db/postgres.js";
 import type { BotEvent } from "../structures/event.js";
 import { deployCommands, formatDeployReport } from "../utils/deploy-commands.js";
 
@@ -13,18 +12,19 @@ export const event: BotEvent = {
     console.log(`Logged in as ${client.user.tag}`);
     console.log(`Client is in ${client.guilds.cache.size} guild(s).`);
     console.log("Initializing guild storage and deploying commands...");
-    
-    for (const guild of client.guilds.cache.values()) {
-      try {
-        if (config.databaseUrl) {
-          await upsertGuild(guild.id, guild.name);
-        }
 
-        const deployResult = await deployCommands({ guildId: guild.id });
-        console.log(formatDeployReport(deployResult, guild.id));
-      } catch (error) {
-        console.error(`Failed to initialize guild ${guild.id}:`, error);
-      }
+    // Auto-deploy commands on startup (production: global, development: guild-only)
+    const isProduction = !config.guildId;
+    if (isProduction) {
+      console.log("Production mode: deploying commands globally...");
+      const result = await deployCommands({ guildId: null });
+      console.log(formatDeployReport(result, null));
+    }
+
+    if (!isProduction) {
+      console.log(`Development mode: deploying commands for guild ${config.guildId}...`);
+      const result = await deployCommands({ guildId: config.guildId });
+      console.log(formatDeployReport(result, config.guildId));
     }
 
     if (!config.databaseUrl) {
