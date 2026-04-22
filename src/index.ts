@@ -4,10 +4,15 @@ import { closeDb, initializeGuildStorage } from "./db/postgres.js";
 import { loadCommands } from "./loaders/commands.js";
 import { loadEvents } from "./loaders/events.js";
 import type { BotClient } from "./types/client.js";
+import { initializePlayer } from "./utils/music.js";
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 }) as BotClient;
+
+// Initialize music player
+const musicPlayer = await initializePlayer(client);
+(client as any).musicPlayer = musicPlayer;
 
 client.commands = new Map();
 client.commands = new Map((await loadCommands()).entries());
