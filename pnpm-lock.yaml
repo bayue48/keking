@@ -17,6 +17,9 @@ importers:
       discord-player:
         specifier: ^7.2.0
         version: 7.2.0(@discord-player/extractor@7.2.0)(mediaplex@1.0.0)(tsx@4.21.0)
+      discord-player-tts:
+        specifier: ^1.0.9
+        version: 1.0.9
       discord-player-youtubei:
         specifier: ^2.0.0
         version: 2.0.0
@@ -775,6 +778,9 @@ packages:
 
   discord-api-types@0.38.47:
     resolution: {integrity: sha512-XgXQodHQBAE6kfD7kMvVo30863iHX1LHSqNq6MGUTDwIFCCvHva13+rwxyxVXDqudyApMNAd32PGjgVETi5rjA==}
+
+  discord-player-tts@1.0.9:
+    resolution: {integrity: sha512-GcCPLKofFdJeqjmqNSCDPE+ZePppQ7jZ6KDPbDR/XYIIU77EXEsNOqKUbOlaEM+/+8BBg4IJaU+e1aB66kSINA==}
 
   discord-player-youtubei@2.0.0:
     resolution: {integrity: sha512-/40lI5EjZvt7+licZZxbxGLosWet3et7ozaB7JoucDKYjNvoflrBaJ0nBKgrCv4zua+q1LWZpOUx5msNXJpOFQ==}
@@ -2335,6 +2341,8 @@ snapshots:
     optional: true
 
   discord-api-types@0.38.47: {}
+
+  discord-player-tts@1.0.9: {}
 
   discord-player-youtubei@2.0.0:
     dependencies:

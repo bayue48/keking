@@ -3,7 +3,8 @@ import { DefaultExtractors } from "@discord-player/extractor";
 import { YoutubeiExtractor } from "discord-player-youtubei";
 import type { GuildMember, VoiceBasedChannel } from "discord.js";
 import { Client } from "discord.js";
-import { config } from "../config.js";
+import { youtubeCookieHandler } from "./cookies-handler.js";
+import { TTSExtractor } from "discord-player-tts";
 
 // Initialize discord-player
 let player: Player | null = null;
@@ -14,7 +15,18 @@ export async function initializePlayer(client: Client): Promise<Player> {
     await player.extractors.loadMulti(DefaultExtractors);
     await player.extractors.register(YoutubeiExtractor, {
       useYoutubeDL: true,
-      cookie: config.ytCookies,
+      cookie: await youtubeCookieHandler() || '',
+      streamOptions: {
+        useClient: "IOS",
+        highWaterMark: 1024 * 1024,
+      },
+      useServerAbrStream: true,
+      generateWithPoToken: true,
+      logLevel: "ALL"
+    });
+    await player.extractors.register(TTSExtractor, {
+      language: "en",
+      slow: false
     });
     const extractorNames = player.extractors.store.map((extractor) => extractor.identifier).join(", ");
     console.log(`[music] loaded extractors: ${extractorNames}`);
@@ -230,6 +242,34 @@ export class MusicPlayer {
     } catch (error) {
       console.error("Error playing track:", error);
       return "Failed to play the track.";
+    }
+  }
+
+  async playTTS(text: string): Promise<string> {
+    if (!this.activeChannel) return "Not connected to a voice channel.";
+    if (!text || text.trim().length === 0) return "Please provide text to convert to speech.";
+
+    try {
+      await this.discordPlayer.play(this.activeChannel as any, `tts:${text}`, {
+        nodeOptions: {
+          leaveOnEnd: true,
+          leaveOnEndCooldown: 60_000,
+          metadata: { guildId: this.guildId },
+        },
+      });
+      this.logVoiceConnectionState("playTTS");
+
+      let reply = '';
+      if (this.discordPlayer.nodes.get(this.guildId)?.size === 0) {
+        reply = `Now playing TTS: ${text}`;
+      } else {
+        reply = `Added to queue TTS: ${text}`;
+      }
+
+      return reply;
+    } catch (error) {
+      console.error("Error playing TTS:", error);
+      return "Failed to play TTS. Please check the text format.";
     }
   }
 
