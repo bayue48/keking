@@ -1,7 +1,5 @@
 import { createHash } from "node:crypto";
-
 import { REST, Routes, type RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
-
 import { config } from "../config.js";
 import { getGuildCommandHash, setGuildCommandHash } from "../db/postgres.js";
 import { loadCommands } from "../loaders/commands.js";
@@ -41,14 +39,13 @@ export async function getCurrentCommandsHash(): Promise<string> {
 
 type DeployCommandsOptions = {
   guildId?: string | null | undefined;
-  force?: boolean;
 };
 
 export async function deployCommands(options: DeployCommandsOptions = {}): Promise<DeployCommandsResult> {
-  const { guildId, force = false } = options;
+  const { guildId } = options;
   const { body, hash, names } = await getCommandPayload();
 
-  if (!force && guildId && config.databaseUrl) {
+  if (guildId && config.databaseUrl) {
     const currentHash = await getGuildCommandHash(guildId);
 
     if (currentHash === hash) {
@@ -95,6 +92,6 @@ export function formatDeployReport(result: DeployCommandsResult, guildId?: strin
   return [
     `${result.skipped ? "Skipped deployment for" : "Registered"} ${result.count} application command(s) for ${target}.`,
     `Hash: ${result.hash}`,
-    // `Commands: ${result.commandNames.join(", ")}`,
+    `Commands: ${result.commandNames.join(", ")}`,
   ].join(" ");
 }

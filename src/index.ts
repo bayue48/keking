@@ -10,11 +10,8 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 }) as BotClient;
 
-// Initialize music player
-const musicPlayer = await initializePlayer(client);
-(client as any).musicPlayer = musicPlayer;
+client.musicPlayer = await initializePlayer(client);
 
-client.commands = new Map();
 client.commands = new Map((await loadCommands()).entries());
 
 if (config.databaseUrl) {

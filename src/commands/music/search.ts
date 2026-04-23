@@ -27,7 +27,6 @@ export const command: SlashCommand = {
 
     const player = getPlayer(interaction.guildId!);
 
-    // Join the channel if not already joined
     const joined = await player.joinChannel(member);
     if (!joined) {
       await interaction.reply({

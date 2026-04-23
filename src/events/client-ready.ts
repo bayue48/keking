@@ -11,7 +11,6 @@ export const event: BotEvent = {
     const [client] = args as [Client<true>];
     console.log(`Logged in as ${client.user.tag}`);
     console.log(`Client is in ${client.guilds.cache.size} guild(s).`);
-    console.log("Initializing guild storage and deploying commands...");
 
     // Auto-deploy commands on startup (production: global, development: guild-only)
     const isProduction = !config.guildId;

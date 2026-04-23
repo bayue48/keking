@@ -64,13 +64,28 @@ export class MusicPlayer {
 
   private normalizeQuery(input: string): string {
     const trimmed = input.trim();
-    if (!trimmed.includes("open.spotify.com/") && !trimmed.includes("youtu")) {
+    
+    // For YouTube URLs, preserve the video ID (v=...) but strip tracking params
+    if (trimmed.includes("youtu")) {
+      try {
+        const url = new URL(trimmed);
+        const videoId = url.searchParams.get("v");
+        if (videoId) {
+          return `https://www.youtube.com/watch?v=${videoId}`;
+        }
+      } catch {
+        // If URL parsing fails, return original
+        return trimmed;
+      }
+    }
+
+    // For Spotify URLs, preserve them as-is
+    if (trimmed.includes("open.spotify.com/")) {
       return trimmed;
     }
 
-    // Drop tracking/search params (e.g. ?si=...) to improve extractor matching.
-    const [baseUrl] = trimmed.split("?");
-    return baseUrl ?? trimmed;
+    // For other inputs, return as-is
+    return trimmed;
   }
 
   addToQueue(url: string): void {

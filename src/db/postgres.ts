@@ -89,13 +89,6 @@ export async function getGuildRecord(guildId: string): Promise<StoredGuildRecord
   return result.rows[0] ?? null;
 }
 
-export async function getStoredGuildCount(): Promise<number> {
-  const db = getDb();
-  const result = await db.query<{ count: string }>("SELECT COUNT(*) AS count FROM bot_guilds");
-
-  return Number(result.rows[0]?.count ?? 0);
-}
-
 export async function setGuildCommandHash(guildId: string, commandsHash: string): Promise<void> {
   const db = getDb();
 

@@ -4,9 +4,7 @@ import {
   SlashCommandBuilder,
   type InteractionReplyOptions,
 } from "discord.js";
-
 import { config } from "../../config.js";
-import { getStoredGuildCount } from "../../db/postgres.js";
 import type { SlashCommand } from "../../structures/command.js";
 import { createErrorEmbed } from "../../utils/embeds.js";
 
@@ -35,7 +33,6 @@ export const command: SlashCommand = {
     try {
       const uptimeMs = interaction.client.uptime ?? 0;
       const rssMb = Math.round(process.memoryUsage().rss / 1024 / 1024);
-      const storedGuildCount = config.databaseUrl ? await getStoredGuildCount() : 0;
 
       const embed = new EmbedBuilder()
         .setTitle("Bot Stats")
@@ -45,7 +42,6 @@ export const command: SlashCommand = {
           { name: "Ping", value: `${Math.round(interaction.client.ws.ping)} ms`, inline: true },
           { name: "Memory", value: `${rssMb} MB RSS`, inline: true },
           { name: "Database", value: config.databaseUrl ? "Connected" : "Disabled", inline: true },
-          { name: "Stored Guild Rows", value: storedGuildCount.toString(), inline: true },
         );
 
       await interaction.editReply({ embeds: [embed] });
