@@ -39,16 +39,7 @@ export class MusicPlayer {
 
     try {
       const query = this.normalizeQuery(urlOrQuery);
-      const searchEngine = this.getSearchEngine(query);
-
-      const result = await this.discordPlayer.play(this.activeChannel as any, query, {
-        searchEngine,
-        nodeOptions: {
-          leaveOnEnd: true,
-          leaveOnEndCooldown: 60_000,
-          metadata: { guildId: this.guildId },
-        },
-      });
+      const result = await this.playWithFallback(query);
       this.logVoiceConnectionState("play");
 
       let reply = ''
@@ -96,8 +87,59 @@ export class MusicPlayer {
     return trimmed;
   }
 
-  private getSearchEngine(query: string): QueryType {
-    return query.includes("youtube.com/watch?v=") ? QueryType.YOUTUBE_VIDEO : QueryType.AUTO;
+  private async playWithFallback(query: string) {
+    const nodeOptions = {
+      leaveOnEnd: true,
+      leaveOnEndCooldown: 60_000,
+      metadata: { guildId: this.guildId },
+    };
+
+    const attempts: Array<{ label: string; query: string; searchEngine: QueryType }> = [
+      { label: "auto", query, searchEngine: QueryType.AUTO },
+    ];
+
+    const videoId = this.extractYoutubeVideoId(query);
+    if (videoId) {
+      const canonicalUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      attempts.push({ label: "youtube-video", query: canonicalUrl, searchEngine: QueryType.YOUTUBE_VIDEO });
+      attempts.push({ label: "youtube-search", query: videoId, searchEngine: QueryType.YOUTUBE_SEARCH });
+    }
+
+    let lastError: unknown = null;
+    for (const attempt of attempts) {
+      try {
+        return await this.discordPlayer.play(this.activeChannel as any, attempt.query, {
+          searchEngine: attempt.searchEngine,
+          nodeOptions,
+        });
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          `[music] play attempt failed: strategy=${attempt.label} engine=${attempt.searchEngine} query=${attempt.query}`,
+        );
+      }
+    }
+
+    throw lastError ?? new Error("No playable result found.");
+  }
+
+  private extractYoutubeVideoId(query: string): string | null {
+    try {
+      const url = new URL(query);
+      const hostname = url.hostname.replace(/^www\./, "");
+
+      if (hostname === "youtu.be") {
+        return url.pathname.split("/").filter(Boolean)[0] ?? null;
+      }
+
+      if (hostname === "youtube.com" || hostname === "m.youtube.com" || hostname === "music.youtube.com") {
+        return url.searchParams.get("v");
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
   }
 
   addToQueue(url: string): void {
