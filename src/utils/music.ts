@@ -1,4 +1,4 @@
-import { Player, Track } from "discord-player";
+import { Player, QueryType, Track } from "discord-player";
 import { DefaultExtractors } from "@discord-player/extractor";
 import { YoutubeiExtractor } from "discord-player-youtubei";
 import type { GuildMember, VoiceBasedChannel } from "discord.js";
@@ -38,18 +38,21 @@ export class MusicPlayer {
     if (!this.activeChannel) return "Not connected to a voice channel.";
 
     try {
-      const normalizedQuery = this.normalizeQuery(urlOrQuery);
+      const query = this.normalizeQuery(urlOrQuery);
+      const searchEngine = this.getSearchEngine(query);
 
-      const result = await this.discordPlayer.play(this.activeChannel as any, normalizedQuery, {
+      const result = await this.discordPlayer.play(this.activeChannel as any, query, {
+        searchEngine,
         nodeOptions: {
           leaveOnEnd: true,
           leaveOnEndCooldown: 60_000,
           metadata: { guildId: this.guildId },
         },
       });
+      this.logVoiceConnectionState("play");
 
       let reply = ''
-      if (!this.discordPlayer.nodes.get(this.guildId)?.isPlaying()) {
+      if (this.discordPlayer.nodes.get(this.guildId)?.size === 0) {
         reply = `Now playing: ${result.track.title} by ${result.track.author}`;
       } else {
         reply = `Added to queue: ${result.track.title} by ${result.track.author}`;
@@ -58,34 +61,43 @@ export class MusicPlayer {
       return reply;
     } catch (error) {
       console.error("Error playing track:", error);
-      return "Failed to play the track.";
+      return "Failed to play the track. If this is a YouTube link, try using the full watch URL or a song title.";
     }
   }
 
   private normalizeQuery(input: string): string {
     const trimmed = input.trim();
-    
-    // For YouTube URLs, preserve the video ID (v=...) but strip tracking params
-    if (trimmed.includes("youtu")) {
-      try {
-        const url = new URL(trimmed);
+
+    if (!trimmed.includes("youtu")) {
+      return trimmed;
+    }
+
+    try {
+      const url = new URL(trimmed);
+      const hostname = url.hostname.replace(/^www\./, "");
+
+      if (hostname === "youtu.be") {
+        const shortId = url.pathname.split("/").filter(Boolean)[0];
+        if (shortId) {
+          return `https://www.youtube.com/watch?v=${shortId}`;
+        }
+      }
+
+      if (hostname === "youtube.com" || hostname === "m.youtube.com" || hostname === "music.youtube.com") {
         const videoId = url.searchParams.get("v");
         if (videoId) {
           return `https://www.youtube.com/watch?v=${videoId}`;
         }
-      } catch {
-        // If URL parsing fails, return original
-        return trimmed;
       }
-    }
-
-    // For Spotify URLs, preserve them as-is
-    if (trimmed.includes("open.spotify.com/")) {
+    } catch {
       return trimmed;
     }
 
-    // For other inputs, return as-is
     return trimmed;
+  }
+
+  private getSearchEngine(query: string): QueryType {
+    return query.includes("youtube.com/watch?v=") ? QueryType.YOUTUBE_VIDEO : QueryType.AUTO;
   }
 
   addToQueue(url: string): void {
@@ -205,6 +217,7 @@ export class MusicPlayer {
 
       if (!queue.connection) {
         await queue.connect(this.activeChannel as any);
+        this.logVoiceConnectionState("playTrack.connect");
       }
 
       queue.addTrack(track);
@@ -213,10 +226,11 @@ export class MusicPlayer {
 
       if (!queue.isPlaying()) {
         await queue.node.play();
+        this.logVoiceConnectionState("playTrack.start");
         result = `Now playing: ${track.title} by ${track.author}`;
       }
 
-      if (queue.isPlaying()) {
+      if (queue.size > 1) {
         result = `Added to queue: ${track.title} by ${track.author}`;
       }
 
@@ -233,6 +247,13 @@ export class MusicPlayer {
       queue.delete();
     }
     this.activeChannel = null;
+  }
+
+  private logVoiceConnectionState(context: string): void {
+    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const status = queue?.connection?.state?.status ?? "no-connection";
+    const channelId = this.activeChannel?.id ?? "none";
+    console.log(`[voice:${context}] guild=${this.guildId} channel=${channelId} status=${status}`);
   }
 }
 
