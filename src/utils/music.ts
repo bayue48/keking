@@ -1,12 +1,12 @@
 import { Player, Track, QueueRepeatMode } from "discord-player";
 import { DefaultExtractors } from "@discord-player/extractor";
-import { YoutubeiExtractor } from "discord-player-youtubei";
+import { YoutubeExtractor } from "discord-player-youtube";
 import type { GuildMember, VoiceBasedChannel } from "discord.js";
 import { Client } from "discord.js";
-import { youtubeCookieHandler } from "./cookies-handler.js";
 import { TTSExtractor } from "discord-player-tts";
 import { registerMusicEvents } from "./music-events.js";
 import { Client as GeniusClient } from "genius-lyrics";
+import { config } from "../config.js";
 
 // Initialize discord-player
 let player: Player | null = null;
@@ -15,16 +15,8 @@ export async function initializePlayer(client: Client): Promise<Player> {
   if (!player) {
     player = new Player(client as any);
     await player.extractors.loadMulti(DefaultExtractors);
-    await player.extractors.register(YoutubeiExtractor, {
-      useYoutubeDL: true,
-      cookie: await youtubeCookieHandler() || '',
-      streamOptions: {
-        useClient: "IOS",
-        highWaterMark: 1024 * 1024,
-      },
-      useServerAbrStream: true,
-      generateWithPoToken: true,
-      // logLevel: "ALL"
+    await player.extractors.register(YoutubeExtractor, {
+      cookie: config.ytCookies,
     });
     await player.extractors.register(TTSExtractor, {
       language: "en",
