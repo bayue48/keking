@@ -7,7 +7,12 @@ import type { BotClient } from "./types/client.js";
 import { initializePlayer } from "./utils/music.js";
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
 }) as BotClient;
 
 client.musicPlayer = await initializePlayer(client);
