@@ -1,0 +1,16 @@
+title: Keking
+description: A powerful Discord music bot with lyrics, playlists, and more
+theme: jekyll-theme-minimal
+author: bayue
+email: bayue_@outlook.com
+
+# GitHub Pages settings
+markdown: kramdown
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# Exclude these files from processing
+exclude:
+  - README.md
+  - LICENSE

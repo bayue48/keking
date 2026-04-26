@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Commands - Keking</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container">
+        <h1 class="logo"><a href="index.html#top">Keking</a></h1>
+        <ul class="nav-links">
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="index.html#commands">Commands</a></li>
+          <li><a href="index.html#setup">Setup</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li>
+            <a href="https://github.com/bayue48/keking" target="_blank"
+              >GitHub</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <section class="commands">
+      <div class="container">
+        <h2>Full Command Reference</h2>
+
+        <!-- Music Commands -->
+        <div class="command-category">
+          <h3>🎵 Music Commands</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/play &lt;URL or query&gt;</h4>
+              <p>Play a song from YouTube, Spotify, or search by title.</p>
+            </div>
+            <div class="command">
+              <h4>/skip</h4>
+              <p>Skip the currently playing track.</p>
+            </div>
+            <div class="command">
+              <h4>/pause</h4>
+              <p>Pause the current playback.</p>
+            </div>
+            <div class="command">
+              <h4>/resume</h4>
+              <p>Resume paused playback.</p>
+            </div>
+            <div class="command">
+              <h4>/stop</h4>
+              <p>Stop playback and clear the queue.</p>
+            </div>
+            <div class="command">
+              <h4>/queue</h4>
+              <p>Display the current music queue.</p>
+            </div>
+            <div class="command">
+              <h4>/now</h4>
+              <p>
+                Show the currently playing track with duration and queue size.
+              </p>
+            </div>
+            <div class="command">
+              <h4>/shuffle</h4>
+              <p>Shuffle the music queue.</p>
+            </div>
+            <div class="command">
+              <h4>/remove &lt;index&gt;</h4>
+              <p>Remove a specific track from the queue by index.</p>
+            </div>
+            <div class="command">
+              <h4>/clear</h4>
+              <p>Clear all tracks from the queue.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loop/Repeat Commands -->
+        <div class="command-category">
+          <h3>🔁 Loop Modes</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/loop off</h4>
+              <p>Disable loop mode - play once and stop.</p>
+            </div>
+            <div class="command">
+              <h4>/loop track</h4>
+              <p>Loop the currently playing track.</p>
+            </div>
+            <div class="command">
+              <h4>/loop queue</h4>
+              <p>Loop the entire queue.</p>
+            </div>
+            <div class="command">
+              <h4>/loop autoplay</h4>
+              <p>Enable autoplay - bot adds similar tracks when queue ends.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lyrics Commands -->
+        <div class="command-category">
+          <h3>📝 Lyrics</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/lyrics [title] [artist]</h4>
+              <p>
+                Display lyrics for the currently playing track or search for
+                specific lyrics.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text-to-Speech -->
+        <div class="command-category">
+          <h3>🎤 Text-to-Speech</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/tts &lt;text&gt;</h4>
+              <p>
+                Convert text to speech and play in the voice channel. Bot must
+                be connected.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Commands -->
+        <div class="command-category">
+          <h3>🔍 Search</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/search &lt;query&gt;</h4>
+              <p>Search for songs and display top 5 results.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Commands -->
+        <div class="command-category">
+          <h3>⚙️ Admin Commands</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/botstats</h4>
+              <p>Display bot statistics and uptime information.</p>
+            </div>
+            <div class="command">
+              <h4>/guildinfo</h4>
+              <p>Show information about the current server (guild).</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Utility Commands -->
+        <div class="command-category">
+          <h3>🛠️ Utility Commands</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/help</h4>
+              <p>Display help information and available commands.</p>
+            </div>
+            <div class="command">
+              <h4>/ping</h4>
+              <p>Check bot latency and response time.</p>
+            </div>
+            <div class="command">
+              <h4>/server</h4>
+              <p>Display server status and information.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integration Commands -->
+        <div class="command-category">
+          <h3>🔗 Integrations</h3>
+          <div class="command-list">
+            <div class="command">
+              <h4>/pia</h4>
+              <p>Search novel from NovelPia Global</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2026 Keking Discord Bot. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <style>
+      .command-category {
+        margin: 2rem 0;
+        padding: 2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .command-category h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .command-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .command {
+        background: var(--light-color);
+        padding: 1.5rem;
+        border-radius: 5px;
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .command h4 {
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+        font-family: "Courier New", monospace;
+        font-size: 1rem;
+      }
+
+      .command p {
+        color: #666;
+        font-size: 0.95rem;
+      }
+
+      @media (max-width: 768px) {
+        .command-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </body>
+</html>

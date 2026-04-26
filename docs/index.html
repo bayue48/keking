@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keking - Discord Music Bot</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body id="top">
+    <nav class="navbar">
+      <div class="container">
+        <h1 class="logo"><a href="#top">Keking</a></h1>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#commands">Commands</a></li>
+          <li><a href="#setup">Setup</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li>
+            <a href="https://github.com/bayue48/keking" target="_blank"
+              >GitHub</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="container">
+        <h2>Welcome to Keking</h2>
+        <p>A powerful Discord music bot with lyrics, playlists, and more</p>
+        <div class="hero-actions">
+          <a href="#setup" class="btn btn-primary">Get Started</a>
+          <a
+            href="https://s.id/keking"
+            class="btn btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Try Me</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="container">
+        <h2>Features</h2>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>📱 Social Media Previews</h3>
+            <p>
+              Embed and preview content from Twitter/X, Instagram, Facebook, and
+              Reddit
+            </p>
+          </div>
+          <div class="feature-card">
+            <h3>📚 Novel Search (PIA)</h3>
+            <p>
+              Search and discover novels from NovelPia with information about
+              views, likes, and episode counts
+            </p>
+          </div>
+          <div class="feature-card">
+            <h3>🎵 Music Streaming</h3>
+            <p>
+              Play music from popular music streaming services with high-quality
+              audio
+            </p>
+          </div>
+          <div class="feature-card">
+            <h3>📝 Lyrics Display</h3>
+            <p>View lyrics for currently playing tracks using Genius API</p>
+          </div>
+          <div class="feature-card">
+            <h3>🎤 Text-to-Speech</h3>
+            <p>Convert text messages to speech directly in voice channels</p>
+          </div>
+          <div class="feature-card">
+            <h3>🔍 Search</h3>
+            <p>Search for songs and view top 5 results instantly</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="commands" class="commands">
+      <div class="container">
+        <h2>Commands</h2>
+        <p>Quick reference of available commands:</p>
+        <table class="commands-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Commands</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Music</td>
+              <td>
+                /play, /skip, /pause, /resume, /stop, /queue, /shuffle, /remove,
+                /clear
+              </td>
+            </tr>
+            <tr>
+              <td>Playlist</td>
+              <td>Playlist management and favorites</td>
+            </tr>
+            <tr>
+              <td>Lyrics</td>
+              <td>/lyrics - Display lyrics for current or specified track</td>
+            </tr>
+            <tr>
+              <td>Text-to-Speech</td>
+              <td>/tts - Convert text to speech</td>
+            </tr>
+            <tr>
+              <td>Admin</td>
+              <td>/botstats, /guildinfo</td>
+            </tr>
+            <tr>
+              <td>Utility</td>
+              <td>/help, /ping, /server</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <a href="commands.html" class="btn btn-secondary"
+            >View Full Command List</a
+          >
+        </p>
+      </div>
+    </section>
+
+    <section id="setup" class="setup">
+      <div class="container">
+        <h2>Setup & Installation</h2>
+        <div class="setup-steps">
+          <div class="step">
+            <h3>1. Prerequisites</h3>
+            <ul>
+              <li>Node.js 18+ and pnpm</li>
+              <li>Discord bot token</li>
+              <li>PostgreSQL (or use bundled Docker Compose)</li>
+              <li>YouTube cookies file (for music)</li>
+            </ul>
+          </div>
+
+          <div class="step">
+            <h3>2. Environment Setup</h3>
+            <pre><code>cp .env.example .env</code></pre>
+            <p>Fill in required values:</p>
+            <ul>
+              <li><code>DISCORD_TOKEN</code> - Your bot token</li>
+              <li><code>DISCORD_CLIENT_ID</code> - Your bot client ID</li>
+              <li><code>DATABASE_URL</code> - PostgreSQL connection string</li>
+              <li><code>YOUTUBE_COOKIES</code> - Youtube cookies string</li>
+            </ul>
+          </div>
+
+          <div class="step">
+            <h3>3. Using Docker (Recommended)</h3>
+            <pre><code>pnpm docker:up</code></pre>
+            <p>This will start the bot and PostgreSQL in Docker containers.</p>
+            <p>Check logs with: <code>pnpm docker:logs</code></p>
+          </div>
+
+          <div class="step">
+            <h3>4. Manual Installation</h3>
+            <pre><code>pnpm install</code></pre>
+            <pre><code>pnpm dev</code></pre>
+            <p>Run the bot locally without Docker.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2026 Keking Discord Bot. All rights reserved.</p>
+        <p><a href="privacy.html">Privacy Policy</a></p>
+      </div>
+    </footer>
+  </body>
+</html>
