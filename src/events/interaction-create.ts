@@ -10,6 +10,7 @@ import type { BotEvent } from "../structures/event.js";
 import type { BotClient } from "../types/client.js";
 import { createErrorEmbed } from "../utils/embeds.js";
 import { getPlayer } from "../utils/music.js";
+import { MissingBotPermissionsError, createMissingPermissionsReply } from "../utils/permissions.js";
 
 export const event: BotEvent = {
   name: Events.InteractionCreate,
@@ -35,10 +36,12 @@ export const event: BotEvent = {
       } catch (error) {
         console.error(`Failed to execute /${interaction.commandName}:`, error);
 
-        const reply = {
-          embeds: [createErrorEmbed("Command Failed", "Something went wrong while running that command.")],
-          flags: MessageFlags.Ephemeral,
-        } satisfies InteractionReplyOptions;
+        const reply = error instanceof MissingBotPermissionsError
+          ? createMissingPermissionsReply(error)
+          : {
+              embeds: [createErrorEmbed("Command Failed", "Something went wrong while running that command.")],
+              flags: MessageFlags.Ephemeral,
+            } satisfies InteractionReplyOptions;
 
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp(reply);
@@ -48,9 +51,26 @@ export const event: BotEvent = {
         await interaction.reply(reply);
       }
     } else if (interaction.isButton()) {
-      // Handle button interactions
       if (interaction.customId.startsWith('music_')) {
-        await handleMusicButton(interaction);
+        try {
+          await handleMusicButton(interaction);
+        } catch (error) {
+          console.error(`Failed to handle button ${interaction.customId}:`, error);
+
+          const reply = error instanceof MissingBotPermissionsError
+            ? createMissingPermissionsReply(error)
+            : {
+                embeds: [createErrorEmbed("Action Failed", "Something went wrong while running that action.")],
+                flags: MessageFlags.Ephemeral,
+              } satisfies InteractionReplyOptions;
+
+          if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(reply);
+            return;
+          }
+
+          await interaction.reply(reply);
+        }
       }
     }
   },

@@ -1,6 +1,7 @@
 import { Client } from "discord.js";
 import { Player, GuildQueueEvent } from "discord-player";
 import { createInfoEmbed } from "./embeds.js";
+import { config } from "../config.js";
 
 export async function registerMusicEvents(player: Player, client: Client): Promise<void> {
     console.log("core || ", player.scanDeps());
@@ -110,17 +111,19 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
         }
     });
 
-    // player.on(GuildQueueEvent.Debug, (message) => {
-    //     // Emitted when the player sends debug info
-    //     // Useful for seeing what dependencies, extractors, etc are loaded
-    //     console.log(`General player debug event: ${message}`);
-    // });
+    if (config.guildId != '') {
+        player.on(GuildQueueEvent.Debug, (message) => {
+            // Emitted when the player sends debug info
+            // Useful for seeing what dependencies, extractors, etc are loaded
+            console.log(`General player debug event: ${message}`);
+        });
 
-    // player.events.on(GuildQueueEvent.Debug, (queue, message) => {
-    //     // Emitted when the player queue sends debug info
-    //     // Useful for seeing what state the current queue is at
-    //     console.log(`[DEBUG ${queue.guild.id}] ${message}`);
-    // });
+        player.events.on(GuildQueueEvent.Debug, (queue, message) => {
+            // Emitted when the player queue sends debug info
+            // Useful for seeing what state the current queue is at
+            console.log(`[DEBUG ${queue.guild.id}] ${message}`);
+        });
+    }
 
     player.events.on(GuildQueueEvent.Error, (queue, error) => {
         console.log(`General player error event: ${error}`);

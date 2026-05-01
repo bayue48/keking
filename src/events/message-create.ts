@@ -1,7 +1,12 @@
-import { Events, MessageFlags, type Message } from "discord.js";
+import { Events, MessageFlags, PermissionFlagsBits, type Message } from "discord.js";
 
 import type { BotEvent } from "../structures/event.js";
 import { extractSocialMirrorLinks } from "../utils/social-preview.js";
+import {
+  MissingBotPermissionsError,
+  assertBotHasChannelPermissions,
+  createMissingPermissionsMessage,
+} from "../utils/permissions.js";
 
 const mentionReplies = [
   "iya beb",
@@ -60,7 +65,18 @@ async function previewSocialLinks(message: Message): Promise<void> {
     flags: MessageFlags.SuppressNotifications,
   });
 
-  await message.suppressEmbeds(true).catch(() => null);
+  const me = message.guild.members.me;
+  if (!me) {
+    return;
+  }
+
+  assertBotHasChannelPermissions(
+    message.channel,
+    me,
+    [PermissionFlagsBits.ManageMessages],
+  );
+
+  await message.suppressEmbeds(true);
 }
 
 export const event: BotEvent = {
@@ -73,6 +89,22 @@ export const event: BotEvent = {
         if (!handled) {
           return previewSocialLinks(msg);
         }
+      })
+      .catch(async (error) => {
+        console.error("MessageCreate handler failed:", error);
+
+        if (error instanceof MissingBotPermissionsError && msg.inGuild()) {
+          await msg.reply({
+            content: createMissingPermissionsMessage(error),
+            allowedMentions: {
+              repliedUser: false,
+            },
+            flags: MessageFlags.SuppressNotifications,
+          }).catch(() => null);
+          return;
+        }
+
+        throw error;
       });
   },
 };

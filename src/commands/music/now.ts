@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import type { SlashCommand } from '../../structures/command.js';
 import { getPlayer } from '../../utils/music.js';
-import { createInfoEmbed, createErrorEmbed } from '../../utils/embeds.js';
+import { createInfoEmbed } from '../../utils/embeds.js';
 
 export const command: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -21,10 +21,6 @@ export const command: SlashCommand = {
       return;
     }
 
-    // Create progress bar
-    const progressBar = createProgressBar(nowPlaying);
-
-    // Create control buttons
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
         new ButtonBuilder()
@@ -58,7 +54,7 @@ export const command: SlashCommand = {
           },
           {
             name: 'Progress',
-            value: progressBar,
+            value: nowPlaying.progressBar,
             inline: false,
           },
         ],
@@ -67,14 +63,3 @@ export const command: SlashCommand = {
     });
   },
 };
-
-function createProgressBar(nowPlaying: { track: string; duration: string; queueSize: number }): string {
-  // For now, create a simple progress bar since we don't have current position
-  // In a real implementation, you'd need to track current playback position
-  const barLength = 20;
-  const filled = Math.floor(Math.random() * barLength); // Placeholder - replace with actual progress
-  const empty = barLength - filled;
-
-  const progressBar = '█'.repeat(filled) + '░'.repeat(empty);
-  return `\`${progressBar}\``;
-}

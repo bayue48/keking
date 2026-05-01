@@ -1,4 +1,4 @@
-import { Player, Track, QueueRepeatMode } from "discord-player";
+import { Player, Track, QueueRepeatMode, QueryType } from "discord-player";
 import { DefaultExtractors } from "@discord-player/extractor";
 import { YoutubeExtractor } from "discord-player-youtube";
 import type { GuildMember, VoiceBasedChannel } from "discord.js";
@@ -7,6 +7,7 @@ import { TTSExtractor } from "discord-player-tts";
 import { registerMusicEvents } from "./music-events.js";
 import { Client as GeniusClient } from "genius-lyrics";
 import { config } from "../config.js";
+import { assertBotCanJoinVoice } from "./permissions.js";
 
 // Initialize discord-player
 let player: Player | null = null;
@@ -45,6 +46,7 @@ export class MusicPlayer {
 
   async joinChannel(member: GuildMember): Promise<boolean> {
     if (!member.voice.channel) return false;
+    assertBotCanJoinVoice(member);
     this.activeChannel = member.voice.channel;
     return true;
   }
@@ -54,7 +56,9 @@ export class MusicPlayer {
 
     try {
       const normalizedQuery = this.normalizeQuery(urlOrQuery);
+      const isDirectLink = this.isDirectLink(normalizedQuery);
       const result = await this.discordPlayer.play(this.activeChannel as any, normalizedQuery, {
+        searchEngine: isDirectLink ? QueryType.AUTO : QueryType.YOUTUBE_SEARCH,
         nodeOptions: {
           leaveOnEnd: true,
           leaveOnEndCooldown: 300_000,
@@ -77,7 +81,6 @@ export class MusicPlayer {
   private normalizeQuery(input: string): string {
     const trimmed = input.trim();
 
-    // For YouTube URLs, preserve the video ID (v=...) but strip tracking params
     if (trimmed.includes("youtu")) {
       try {
         const url = new URL(trimmed);
@@ -86,7 +89,6 @@ export class MusicPlayer {
           return `https://www.youtube.com/watch?v=${videoId}`;
         }
       } catch {
-        // If URL parsing fails, return original
         return trimmed;
       }
     }
@@ -101,12 +103,20 @@ export class MusicPlayer {
       // Not a URL; fall through and return as-is
     }
 
-    // For other inputs, return as-is
     return trimmed;
   }
 
   addToQueue(url: string): void {
     void this.play(url);
+  }
+
+  private isDirectLink(input: string): boolean {
+    try {
+      const url = new URL(input);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
   }
 
   skip(): string {
@@ -158,18 +168,26 @@ export class MusicPlayer {
     return `${queue.currentTrack.title} by ${queue.currentTrack.author}`;
   }
 
-  getNowPlayingDetails(): { track: string; duration: string; queueSize: number } | null {
+  getNowPlayingDetails(): { track: string; duration: string; queueSize: number; progressBar: string } | null {
     const queue = this.discordPlayer.nodes.get(this.guildId);
     if (!queue?.currentTrack) return null;
 
     const durationMs = queue.currentTrack.durationMS || 0;
     const durationMins = Math.floor(durationMs / 60000);
     const durationSecs = Math.floor((durationMs % 60000) / 1000);
+    const progressBar = queue.node.createProgressBar({
+      length: 18,
+      leftChar: "=",
+      indicator: "o",
+      rightChar: "-",
+      queue: false,
+    }) ?? "`0:00 |o-----------------| 0:00`";
 
     return {
       track: `${queue.currentTrack.title} by ${queue.currentTrack.author}`,
       duration: `${durationMins}:${durationSecs.toString().padStart(2, '0')}`,
       queueSize: queue.tracks.size,
+      progressBar,
     };
   }
 
@@ -281,7 +299,9 @@ export class MusicPlayer {
 
   async search(query: string): Promise<Track[]> {
     try {
-      const results = await this.discordPlayer.search(query, {});
+      const results = await this.discordPlayer.search(query, {
+        searchEngine: QueryType.YOUTUBE_SEARCH,
+      });
       return results.tracks.slice(0, 5);
     } catch (error) {
       console.error("Search error:", error);
@@ -293,6 +313,8 @@ export class MusicPlayer {
     if (!this.activeChannel) return "Not connected to a voice channel.";
 
     try {
+      const existingQueue = this.discordPlayer.nodes.get(this.guildId);
+      const wasPlaying = existingQueue?.isPlaying() ?? false;
       const queue = this.discordPlayer.nodes.get(this.guildId) ||
         this.discordPlayer.nodes.create(this.guildId, {
           metadata: { guildId: this.guildId, textChannelId: this.textChannelId },
@@ -304,7 +326,18 @@ export class MusicPlayer {
         queue.metadata = { ...queue.metadata, guildId: this.guildId, textChannelId: this.textChannelId };
       }
 
+      if (!queue.connection) {
+        await queue.connect(this.activeChannel as any);
+        this.logVoiceConnectionState("playTrack.connect");
+      }
+
       queue.addTrack(track);
+
+      if (!queue.isPlaying()) {
+        await queue.node.play();
+        this.logVoiceConnectionState("playTrack.start");
+      }
+
       return `${track.title} by ${track.author}`;
     } catch (error) {
       console.error("Error playing track:", error);

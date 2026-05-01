@@ -2,6 +2,7 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Mess
 import type { SlashCommand } from '../../structures/command.js';
 import { getPlayer } from '../../utils/music.js';
 import { createErrorEmbed, createInfoEmbed } from '../../utils/embeds.js';
+import { MissingBotPermissionsError, createMissingPermissionsReply } from '../../utils/permissions.js';
 
 export const command: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -100,24 +101,53 @@ export const command: SlashCommand = {
         return;
       }
 
-      await buttonInteraction.deferUpdate();
-      const result = await player.playTrack(selected);
-      let title = 'Added to Queue';
+      try {
+        const currentMember = await interaction.guild?.members.fetch(interaction.user.id);
+        if (!currentMember?.voice.channel) {
+          await buttonInteraction.reply({
+            embeds: [createErrorEmbed('Voice Channel Required', 'You must be in a voice channel to play music.')],
+            flags: MessageFlags.Ephemeral,
+          });
+          return;
+        }
 
+        const rejoined = await player.joinChannel(currentMember);
+        if (!rejoined) {
+          await buttonInteraction.reply({
+            embeds: [createErrorEmbed('Failed to Join', 'Could not join the voice channel.')],
+            flags: MessageFlags.Ephemeral,
+          });
+          return;
+        }
 
-      if (player.getQueue().length === 0) {
-        title = 'Started Playing';
+        await buttonInteraction.deferUpdate();
+        const result = await player.playTrack(selected);
+        let title = 'Added to Queue';
+
+        if (player.getQueue().length === 0) {
+          title = 'Started Playing';
+        }
+
+        await interaction.editReply({
+          embeds: [createInfoEmbed({
+            title: title,
+            description: result,
+          })],
+          components: [],
+        });
+
+        collector.stop();
+      } catch (error) {
+        if (error instanceof MissingBotPermissionsError) {
+          await buttonInteraction.reply({
+            ...createMissingPermissionsReply(error),
+            flags: MessageFlags.Ephemeral,
+          });
+          return;
+        }
+
+        throw error;
       }
-
-      await interaction.editReply({
-        embeds: [createInfoEmbed({
-          title: title,
-          description: result,
-        })],
-        components: [],
-      });
-
-      collector.stop();
     });
 
     collector.on('end', async (collected) => {

@@ -33,7 +33,6 @@ export const command: SlashCommand = {
             return;
         }
 
-        // Split lyrics into chunks if they're too long for Discord embed
         const maxLength = 4000;
         const lyricsText = lyrics.lyrics;
 
@@ -45,7 +44,6 @@ export const command: SlashCommand = {
                 })],
             });
         } else {
-            // Split into multiple messages
             const chunks = [];
             for (let i = 0; i < lyricsText.length; i += maxLength) {
                 chunks.push(lyricsText.slice(i, i + maxLength));
@@ -58,7 +56,6 @@ export const command: SlashCommand = {
                 })],
             });
 
-            // Send remaining chunks as follow-up messages
             for (let i = 1; i < chunks.length; i++) {
                 await interaction.followUp({
                     embeds: [createInfoEmbed({
