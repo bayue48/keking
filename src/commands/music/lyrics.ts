@@ -39,7 +39,7 @@ export const command: SlashCommand = {
         if (lyricsText.length <= maxLength) {
             await interaction.editReply({
                 embeds: [createInfoEmbed({
-                    title: `Lyrics: ${lyrics.title}`,
+                    title: `🎵 Lyrics: ${lyrics.title}`,
                     description: `**Artist:** ${lyrics.artist}\n\n${lyricsText}`,
                 })],
             });
@@ -51,7 +51,7 @@ export const command: SlashCommand = {
 
             await interaction.editReply({
                 embeds: [createInfoEmbed({
-                    title: `Lyrics: ${lyrics.title}`,
+                    title: `🎵 Lyrics: ${lyrics.title}`,
                     description: `**Artist:** ${lyrics.artist}\n\n${chunks[0]}`,
                 })],
             });
@@ -59,7 +59,7 @@ export const command: SlashCommand = {
             for (let i = 1; i < chunks.length; i++) {
                 await interaction.followUp({
                     embeds: [createInfoEmbed({
-                        title: `Lyrics (Part ${i + 1})`,
+                        title: `🎵 Lyrics (Part ${i + 1})`,
                         description: chunks[i] || 'No content',
                     })],
                 });

@@ -13,7 +13,7 @@ export const command: SlashCommand = {
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: 'Left Voice Channel',
+        title: '🎵 Left Voice Channel',
         description: 'The bot has left the voice channel.',
       })],
     });

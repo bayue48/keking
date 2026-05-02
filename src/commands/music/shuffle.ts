@@ -21,7 +21,7 @@ export const command: SlashCommand = {
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: 'Queue Shuffled',
+        title: '🎵 Queue Shuffled',
         description: result,
       })],
     });

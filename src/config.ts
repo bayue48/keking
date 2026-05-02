@@ -16,4 +16,6 @@ export const config = {
   guildId: process.env.DISCORD_GUILD_ID,
   databaseUrl: process.env.DATABASE_URL,
   ytCookies: process.env.YOUTUBE_COOKIES || '',
+  spotifyClientId: process.env.SPOTIFY_CLIENT_ID || '',
+  spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET || '',
 };

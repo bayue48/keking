@@ -1,5 +1,5 @@
 import { Player, Track, QueueRepeatMode, QueryType } from "discord-player";
-import { DefaultExtractors } from "@discord-player/extractor";
+import { SoundCloudExtractor, SpotifyExtractor } from "@discord-player/extractor";
 import { YoutubeExtractor } from "discord-player-youtube";
 import type { GuildMember, VoiceBasedChannel } from "discord.js";
 import { Client } from "discord.js";
@@ -15,10 +15,15 @@ let player: Player | null = null;
 export async function initializePlayer(client: Client): Promise<Player> {
   if (!player) {
     player = new Player(client as any);
-    await player.extractors.loadMulti(DefaultExtractors);
+    // await player.extractors.loadMulti(DefaultExtractors);
     await player.extractors.register(YoutubeExtractor, {
       cookie: config.ytCookies,
     });
+    await player.extractors.register(SpotifyExtractor, {
+      clientId: config.spotifyClientId,
+      clientSecret: config.spotifyClientSecret,
+    });
+    await player.extractors.register(SoundCloudExtractor, {});
     await player.extractors.register(TTSExtractor, {
       language: "en",
       slow: false
@@ -167,7 +172,7 @@ export class MusicPlayer {
     return `${queue.currentTrack.title} by ${queue.currentTrack.author}`;
   }
 
-  getNowPlayingDetails(): { track: string; duration: string; queueSize: number; progressBar: string } | null {
+  getNowPlayingDetails(): { track: string; duration: string; queueSize: number; progressBar: string; thumbnail: string | null; url: string | null } | null {
     const queue = this.discordPlayer.nodes.get(this.guildId);
     if (!queue?.currentTrack) return null;
 
@@ -175,7 +180,7 @@ export class MusicPlayer {
     const durationMins = Math.floor(durationMs / 60000);
     const durationSecs = Math.floor((durationMs % 60000) / 1000);
     const progressBar = queue.node.createProgressBar({
-      length: 18,
+      length: 30,
       leftChar: "=",
       indicator: "o",
       rightChar: "-",
@@ -187,6 +192,8 @@ export class MusicPlayer {
       duration: `${durationMins}:${durationSecs.toString().padStart(2, '0')}`,
       queueSize: queue.tracks.size,
       progressBar,
+      thumbnail: queue.currentTrack.thumbnail ?? null,
+      url: queue.currentTrack.url ?? null,
     };
   }
 

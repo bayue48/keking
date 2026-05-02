@@ -14,7 +14,7 @@ export const command: SlashCommand = {
     if (!nowPlaying) {
       await interaction.reply({
         embeds: [createInfoEmbed({
-          title: 'Now Playing',
+          title: '🎵 Now Playing',
           description: 'No track is currently playing.',
         })],
       });
@@ -37,28 +37,34 @@ export const command: SlashCommand = {
           .setStyle(ButtonStyle.Danger),
       );
 
+    let em = [createInfoEmbed({
+      title: '🎵 Now Playing',
+      description: `${nowPlaying.url ? `[${nowPlaying.track}](${nowPlaying.url})` : nowPlaying.track}`,
+      fields: [
+        {
+          name: 'Duration',
+          value: nowPlaying.duration,
+          inline: true,
+        },
+        {
+          name: 'Queue Size',
+          value: `${nowPlaying.queueSize} tracks`,
+          inline: true,
+        },
+        {
+          name: 'Progress',
+          value: nowPlaying.progressBar,
+          inline: false,
+        },
+      ],
+    })]
+
+    if (nowPlaying.thumbnail) {
+      em[0]?.setThumbnail(nowPlaying.thumbnail);
+    }
+
     await interaction.reply({
-      embeds: [createInfoEmbed({
-        title: '🎵 Now Playing',
-        description: nowPlaying.track,
-        fields: [
-          {
-            name: 'Duration',
-            value: nowPlaying.duration,
-            inline: true,
-          },
-          {
-            name: 'Queue Size',
-            value: `${nowPlaying.queueSize} tracks`,
-            inline: true,
-          },
-          {
-            name: 'Progress',
-            value: nowPlaying.progressBar,
-            inline: false,
-          },
-        ],
-      })],
+      embeds: em,
       components: [row],
     });
   },

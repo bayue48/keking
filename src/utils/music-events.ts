@@ -1,5 +1,5 @@
 import { Client } from "discord.js";
-import { Player, GuildQueueEvent } from "discord-player";
+import { Player, GuildQueueEvent, QueueRepeatMode } from "discord-player";
 import { createInfoEmbed } from "./embeds.js";
 import { config } from "../config.js";
 
@@ -20,11 +20,17 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
             if (!channel || !('isTextBased' in channel) || !channel.isTextBased() || !('send' in channel)) return;
             if (track.title === 'TTS') return
 
+            let em = [createInfoEmbed({
+                title: '🎵 Started Playing',
+                description: `${track.url ? `[${track.title} by ${track.author}](${track.url})` : `${track.title} by ${track.author}`}`,
+            })];
+
+            if (track.thumbnail) {
+                em[0]?.setThumbnail(track.thumbnail);
+            }
+
             await channel.send({
-                embeds: [createInfoEmbed({
-                    title: 'Started Playing',
-                    description: `${track.title} by ${track.author}`,
-                })],
+                embeds: em,
             });
         } catch (error) {
             console.error('[music] failed to announce playback:', error);
@@ -42,7 +48,7 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
 
             await channel.send({
                 embeds: [createInfoEmbed({
-                    title: 'Queue Ended',
+                    title: '🎵 Queue Ended',
                     description: 'The music queue has ended.',
                 })],
             });
@@ -62,7 +68,7 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
 
             await channel.send({
                 embeds: [createInfoEmbed({
-                    title: 'Disconnected',
+                    title: '🎵 Disconnected',
                     description: 'Looks like my job here is done, leaving now!',
                 })],
             });
@@ -82,7 +88,7 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
 
             await channel.send({
                 embeds: [createInfoEmbed({
-                    title: 'Voice Channel Empty',
+                    title: '🎵 Voice Channel Empty',
                     description: 'Everyone left the voice channel, leaving now!',
                 })],
             });
@@ -102,10 +108,25 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
 
             await channel.send({
                 embeds: [createInfoEmbed({
-                    title: 'Playback Error',
+                    title: '🎵 Playback Error',
                     description: `An error occurred during playback: ${error.message}`,
                 })],
             });
+
+            if (
+                queue.repeatMode === QueueRepeatMode.AUTOPLAY &&
+                error.message?.includes('Could not extract stream')
+            ) {
+                const failedTrack = queue.currentTrack;
+                const failedTitle = failedTrack ? `${failedTrack.title} by ${failedTrack.author}` : 'Unknown track';
+                queue.node.skip();
+                await channel.send({
+                    embeds: [createInfoEmbed({
+                        title: '🎵 Skipped Unplayable Autoplay Track',
+                        description: `Skipped a track that could not be streamed: ${failedTitle}`,
+                    })],
+                });
+            }
         } catch (error) {
             console.error('[music] failed to announce playback error:', error);
         }

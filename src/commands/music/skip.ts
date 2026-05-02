@@ -13,7 +13,7 @@ export const command: SlashCommand = {
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: 'Track Skipped',
+        title: '🎵 Track Skipped',
         description: result,
       })],
     });

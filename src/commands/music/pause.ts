@@ -13,7 +13,7 @@ export const command: SlashCommand = {
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: 'Music Paused',
+        title: '🎵 Music Paused',
         description: result,
       })],
     });

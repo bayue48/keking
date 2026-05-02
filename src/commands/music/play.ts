@@ -40,11 +40,11 @@ export const command: SlashCommand = {
     await interaction.deferReply();
 
     const result = await player.play(url);
-    let title = 'Added to Queue';
+    let title = '🎵 Added to Queue';
 
 
     if (player.getQueue().length === 0) {
-      title = 'Started Playing';
+      title = '🎵 Started Playing';
     }
 
     await interaction.editReply({

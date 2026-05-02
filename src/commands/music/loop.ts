@@ -34,7 +34,7 @@ export const command: SlashCommand = {
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: 'Loop Mode Updated',
+        title: '🎵 Loop Mode Updated',
         description: result,
       })],
     });

@@ -20,7 +20,7 @@ export const command: SlashCommand = {
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: 'Queue Management',
+        title: '🎵 Track Removed',
         description: result,
       })],
     });

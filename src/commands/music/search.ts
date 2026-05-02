@@ -45,7 +45,7 @@ export const command: SlashCommand = {
     if (results.length === 0) {
       await interaction.editReply({
         embeds: [createInfoEmbed({
-          title: 'Search Results',
+          title: '🎵 Search Results',
           description: 'No tracks found for your search.',
         })],
       });
@@ -68,7 +68,7 @@ export const command: SlashCommand = {
 
     const reply = await interaction.editReply({
       embeds: [createInfoEmbed({
-        title: 'Search Results',
+        title: '🎵 Search Results',
         description: description,
       })],
       components: [row],
@@ -122,10 +122,10 @@ export const command: SlashCommand = {
 
         await buttonInteraction.deferUpdate();
         const result = await player.playTrack(selected);
-        let title = 'Added to Queue';
+        let title = '🎵 Added to Queue';
 
         if (player.getQueue().length === 0) {
-          title = 'Started Playing';
+          title = '🎵 Started Playing';
         }
 
         await interaction.editReply({
