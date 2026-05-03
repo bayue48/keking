@@ -132,7 +132,7 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
         }
     });
 
-    if (config.guildId != '') {
+    if (config.guildId) {
         player.on(GuildQueueEvent.Debug, (message) => {
             // Emitted when the player sends debug info
             // Useful for seeing what dependencies, extractors, etc are loaded
