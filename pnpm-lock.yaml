@@ -42,8 +42,8 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
       youtube-dl-exec:
-        specifier: ^3.1.5
-        version: 3.1.5
+        specifier: ^3.1.6
+        version: 3.1.6
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -1843,8 +1843,8 @@ packages:
   yallist@4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
-  youtube-dl-exec@3.1.5:
-    resolution: {integrity: sha512-dZIjtjaw8HDEhM+MtGP/ETdQfwN5HE5ykXGMT17r8zFJg9geFm71yW58Zc27ZR5xixyrv4JKfi7CthiHldFL9Q==}
+  youtube-dl-exec@3.1.6:
+    resolution: {integrity: sha512-3rYc8jQZHbZAUZ21WCcFlZvWGHiatS2Bo/6vyVOxIcM9q9b8pkjZoPxL8wMDl6OqvPMx5Q+BdJbUIN0pYIYZ+g==}
     engines: {node: '>= 18'}
 
   youtubei.js@17.0.1:
@@ -3507,7 +3507,7 @@ snapshots:
   yallist@4.0.0:
     optional: true
 
-  youtube-dl-exec@3.1.5:
+  youtube-dl-exec@3.1.6:
     dependencies:
       binary-version-check: 6.1.0
       dargs: 7.0.0
