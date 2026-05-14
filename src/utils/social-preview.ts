@@ -4,6 +4,7 @@ const INSTAGRAM_URL_PATTERN =
   /https?:\/\/(?:www\.)?instagram\.com\/(p|reel|reels)\/([A-Za-z0-9_-]+)(?:\/)?(?:\?[^\s]*)?/gi;
 const FACEBOOK_URL_PATTERN = /https?:\/\/(?:www\.|m\.)?facebook\.com\/[^\s]+|https?:\/\/fb\.watch\/[^\s]+/gi;
 const REDDIT_URL_PATTERN = /https?:\/\/(?:www\.|old\.)?reddit\.com\/[^\s]+|https?:\/\/redd\.it\/[^\s]+/gi;
+const TIKTOK_URL_PATTERN = /https?:\/\/(?:www\.|m\.)?tiktok\.com\/[^\s]+|https?:\/\/vt\.tiktok\.com\/[^\s]+/gi;
 
 function normalizeUrl(username: string, statusId: string): string {
   return `https://fixupx.com/${username}/status/${statusId}`;
@@ -47,6 +48,24 @@ function normalizeRedditUrl(rawUrl: string): string | null {
       return url.toString();
     }
 
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeTikTokUrl(rawUrl: string): string | null {
+  try {
+    const url = new URL(rawUrl);
+    if (
+      url.hostname === "tiktok.com" ||
+      url.hostname === "www.tiktok.com" ||
+      url.hostname === "m.tiktok.com" ||
+      url.hostname === "vt.tiktok.com"
+    ) {
+      url.hostname = "tnktok.com";
+      return url.toString();
+    }
     return null;
   } catch {
     return null;
@@ -103,6 +122,22 @@ export function extractSocialMirrorLinks(content: string): string[] {
     }
 
     const normalizedUrl = normalizeRedditUrl(rawUrl);
+
+    if (!normalizedUrl) {
+      continue;
+    }
+
+    links.set(normalizedUrl, normalizedUrl);
+  }
+
+  for (const match of content.matchAll(TIKTOK_URL_PATTERN)) {
+    const rawUrl = match[0];
+
+    if (!rawUrl) {
+      continue;
+    }
+
+    const normalizedUrl = normalizeTikTokUrl(rawUrl);
 
     if (!normalizedUrl) {
       continue;

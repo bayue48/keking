@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder,
   type InteractionReplyOptions,
 } from "discord.js";
-import { config } from "../../config.js";
+import { config } from "../../config/config.js";
 import type { SlashCommand } from "../../structures/command.js";
 import { getCurrentCommandsHash } from "../../utils/deploy-commands.js";
 import { createErrorEmbed } from "../../utils/embeds.js";
@@ -35,7 +35,7 @@ export const command: SlashCommand = {
         .addFields(
           { name: "Guild", value: `${interaction.guild.name} (${interaction.guild.id})` },
           { name: "Members", value: interaction.guild.memberCount.toString(), inline: true },
-          { name: "Database", value: config.databaseUrl ? "Connected" : "Disabled", inline: true },
+          { name: "Database", value: config.database.enabled ? "Connected" : "Disabled", inline: true },
           { name: "Command Hash", value: `\`${currentHash.slice(0, 12)}\``, inline: true },
         );
 

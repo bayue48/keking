@@ -40,3 +40,19 @@ export async function importModulesFrom(relativeDirectory: string): Promise<unkn
       .map(async (filePath) => import(pathToFileURL(filePath).href)),
   );
 }
+
+export async function importNamedExportsFrom<T>(
+  relativeDirectory: string,
+  exportName: string,
+): Promise<T[]> {
+  const modules = await importModulesFrom(relativeDirectory);
+
+  return modules.flatMap((module) => {
+    if (!module || typeof module !== "object" || !(exportName in module)) {
+      return [];
+    }
+
+    const exportedValue = module[exportName as keyof typeof module] as T | undefined;
+    return exportedValue ? [exportedValue] : [];
+  });
+}

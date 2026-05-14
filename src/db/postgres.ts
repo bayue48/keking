@@ -1,118 +1,110 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { eq, sql } from "drizzle-orm";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { config } from "../config/config.js";
+import { botGuilds, type StoredGuildRecord } from "./schema.js";
 
-import { config } from "../config.js";
+type DatabaseSchema = {
+  botGuilds: typeof botGuilds;
+};
+
+type DatabaseClient = NodePgDatabase<DatabaseSchema>;
 
 let pool: Pool | null = null;
+let db: DatabaseClient | null = null;
+
+const migrationsFolder = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "drizzle",
+);
 
 function createPool(): Pool {
-  if (!config.databaseUrl) {
+  if (!config.database.url) {
     throw new Error("Missing required environment variable: DATABASE_URL");
   }
 
   return new Pool({
-    connectionString: config.databaseUrl,
+    connectionString: config.database.url,
   });
 }
 
-export function getDb(): Pool {
-  pool ??= createPool();
-  return pool;
+function createDb(client: Pool): DatabaseClient {
+  return drizzle(client, {
+    schema: {
+      botGuilds,
+    },
+  });
 }
 
-export async function initializeGuildStorage(): Promise<Pool> {
+export function getDb(): DatabaseClient {
+  pool ??= createPool();
+  db ??= createDb(pool);
+  return db;
+}
+
+export async function initializeGuildStorage(): Promise<DatabaseClient> {
   const db = getDb();
-
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS bot_guilds (
-      guild_id TEXT PRIMARY KEY,
-      guild_name TEXT NOT NULL,
-      commands_hash TEXT,
-      joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-
+  await migrate(db, { migrationsFolder });
   return db;
 }
 
 export async function upsertGuild(guildId: string, guildName: string): Promise<void> {
   const db = getDb();
 
-  await db.query(
-    `
-      INSERT INTO bot_guilds (guild_id, guild_name)
-      VALUES ($1, $2)
-      ON CONFLICT (guild_id)
-      DO UPDATE SET
-        guild_name = EXCLUDED.guild_name,
-        updated_at = NOW()
-    `,
-    [guildId, guildName],
-  );
+  await db
+    .insert(botGuilds)
+    .values({ guildId, guildName })
+    .onConflictDoUpdate({
+      target: botGuilds.guildId,
+      set: {
+        guildName,
+        updatedAt: sql`NOW()`,
+      },
+    });
 }
 
 export async function getGuildCommandHash(guildId: string): Promise<string | null> {
   const db = getDb();
-  const result = await db.query<{ commands_hash: string | null }>(
-    `
-      SELECT commands_hash
-      FROM bot_guilds
-      WHERE guild_id = $1
-      LIMIT 1
-    `,
-    [guildId],
-  );
+  const result = await db
+    .select({ commandsHash: botGuilds.commandsHash })
+    .from(botGuilds)
+    .where(eq(botGuilds.guildId, guildId))
+    .limit(1);
 
-  return result.rows[0]?.commands_hash ?? null;
+  return result[0]?.commandsHash ?? null;
 }
-
-export type StoredGuildRecord = {
-  guild_id: string;
-  guild_name: string;
-  commands_hash: string | null;
-  joined_at: Date;
-  updated_at: Date;
-};
 
 export async function getGuildRecord(guildId: string): Promise<StoredGuildRecord | null> {
   const db = getDb();
-  const result = await db.query<StoredGuildRecord>(
-    `
-      SELECT guild_id, guild_name, commands_hash, joined_at, updated_at
-      FROM bot_guilds
-      WHERE guild_id = $1
-      LIMIT 1
-    `,
-    [guildId],
-  );
+  const result = await db
+    .select()
+    .from(botGuilds)
+    .where(eq(botGuilds.guildId, guildId))
+    .limit(1);
 
-  return result.rows[0] ?? null;
+  return result[0] ?? null;
 }
 
 export async function setGuildCommandHash(guildId: string, commandsHash: string): Promise<void> {
   const db = getDb();
 
-  await db.query(
-    `
-      UPDATE bot_guilds
-      SET commands_hash = $2,
-          updated_at = NOW()
-      WHERE guild_id = $1
-    `,
-    [guildId, commandsHash],
-  );
+  await db
+    .update(botGuilds)
+    .set({
+      commandsHash,
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(botGuilds.guildId, guildId));
 }
 
 export async function deleteGuild(guildId: string): Promise<void> {
   const db = getDb();
-
-  await db.query(
-    `
-      DELETE FROM bot_guilds
-      WHERE guild_id = $1
-    `,
-    [guildId],
-  );
+  await db.delete(botGuilds).where(eq(botGuilds.guildId, guildId));
 }
 
 export async function closeDb(): Promise<void> {
@@ -121,5 +113,6 @@ export async function closeDb(): Promise<void> {
   }
 
   await pool.end();
+  db = null;
   pool = null;
 }

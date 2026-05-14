@@ -5,7 +5,7 @@ import {
   type InteractionReplyOptions,
 } from "discord.js";
 import { generateDependencyReport } from "@discordjs/voice";
-import { config } from "../../config.js";
+import { config } from "../../config/config.js";
 import type { SlashCommand } from "../../structures/command.js";
 import { createErrorEmbed } from "../../utils/embeds.js";
 
@@ -72,7 +72,7 @@ export const command: SlashCommand = {
           { name: "Guilds", value: interaction.client.guilds.cache.size.toString(), inline: true },
           { name: "Ping", value: `${Math.round(interaction.client.ws.ping)} ms`, inline: true },
           { name: "Memory", value: `${rssMb} MB RSS`, inline: true },
-          { name: "Database", value: config.databaseUrl ? "Connected" : "Disabled", inline: true },
+          { name: "Database", value: config.database.enabled ? "Connected" : "Disabled", inline: true },
           { name: "Voice Dependencies", value: voiceHealth.status, inline: true },
           { name: "Voice Details", value: voiceHealth.details },
         );

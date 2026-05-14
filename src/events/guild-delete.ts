@@ -1,6 +1,5 @@
 import { Events, type Guild } from "discord.js";
-
-import { config } from "../config.js";
+import { config } from "../config/config.js";
 import { deleteGuild } from "../db/postgres.js";
 import type { BotEvent } from "../structures/event.js";
 
@@ -9,7 +8,7 @@ export const event: BotEvent = {
   async execute(...args) {
     const [guild] = args as [Guild];
 
-    if (!config.databaseUrl) {
+    if (!config.database.enabled) {
       return;
     }
 

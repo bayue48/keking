@@ -1,7 +1,7 @@
 import { Client } from "discord.js";
 import { Player, GuildQueueEvent, QueueRepeatMode } from "discord-player";
 import { createInfoEmbed } from "./embeds.js";
-import { config } from "../config.js";
+import { config } from "../config/config.js";
 
 export async function registerMusicEvents(player: Player, client: Client): Promise<void> {
     console.log("core || ", player.scanDeps());
@@ -132,7 +132,7 @@ export async function registerMusicEvents(player: Player, client: Client): Promi
         }
     });
 
-    if (config.guildId) {
+    if (config.startup.enableDebugLogging) {
         player.on(GuildQueueEvent.Debug, (message) => {
             // Emitted when the player sends debug info
             // Useful for seeing what dependencies, extractors, etc are loaded

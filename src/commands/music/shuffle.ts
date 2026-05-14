@@ -1,29 +1,24 @@
-import { SlashCommandBuilder } from 'discord.js';
-import type { SlashCommand } from '../../structures/command.js';
-import { getPlayer } from '../../utils/music.js';
-import { createInfoEmbed, createErrorEmbed } from '../../utils/embeds.js';
+import { MessageFlags } from "discord.js";
+import { createSimpleMusicCommand } from "./shared.js";
 
-export const command: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('shuffle')
-    .setDescription('Shuffle the current music queue'),
-  async execute(interaction) {
-    const player = getPlayer(interaction.guildId!);
+export const command = createSimpleMusicCommand({
+  name: "shuffle",
+  description: "Shuffle the current music queue",
+  execute: (player) => {
     const result = player.shuffle();
 
-    if (result.includes('Need at least 2 tracks')) {
-      await interaction.reply({
-        embeds: [createErrorEmbed('Cannot Shuffle', result)],
-        ephemeral: true,
-      });
-      return;
+    if (result.includes("Need at least 2 tracks")) {
+      return {
+        title: "Cannot Shuffle",
+        description: result,
+        error: true,
+        flags: MessageFlags.Ephemeral,
+      };
     }
 
-    await interaction.reply({
-      embeds: [createInfoEmbed({
-        title: '🎵 Queue Shuffled',
-        description: result,
-      })],
-    });
+    return {
+      title: "🎵 Queue Shuffled",
+      description: result,
+    };
   },
-};
+});

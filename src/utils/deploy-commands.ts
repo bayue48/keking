@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { REST, Routes, type RESTPostAPIChatInputApplicationCommandsJSONBody } from "discord.js";
-import { config } from "../config.js";
+import { config } from "../config/config.js";
 import { getGuildCommandHash, setGuildCommandHash } from "../db/postgres.js";
 import { loadCommands } from "../loaders/commands.js";
 
@@ -45,7 +45,7 @@ export async function deployCommands(options: DeployCommandsOptions = {}): Promi
   const { guildId } = options;
   const { body, hash, names } = await getCommandPayload();
 
-  if (guildId && config.databaseUrl) {
+  if (guildId && config.database.enabled) {
     const currentHash = await getGuildCommandHash(guildId);
 
     if (currentHash === hash) {
@@ -58,14 +58,14 @@ export async function deployCommands(options: DeployCommandsOptions = {}): Promi
     }
   }
 
-  const rest = new REST({ version: "10" }).setToken(config.token);
+  const rest = new REST({ version: "10" }).setToken(config.discord.token);
   const route = guildId
-    ? Routes.applicationGuildCommands(config.clientId, guildId)
-    : Routes.applicationCommands(config.clientId);
+    ? Routes.applicationGuildCommands(config.discord.clientId, guildId)
+    : Routes.applicationCommands(config.discord.clientId);
 
   await rest.put(route, { body });
 
-  if (guildId && config.databaseUrl) {
+  if (guildId && config.database.enabled) {
     await setGuildCommandHash(guildId, hash);
   }
 
@@ -78,10 +78,10 @@ export async function deployCommands(options: DeployCommandsOptions = {}): Promi
 }
 
 export async function clearCommands(guildId?: string | null): Promise<void> {
-  const rest = new REST({ version: "10" }).setToken(config.token);
+  const rest = new REST({ version: "10" }).setToken(config.discord.token);
   const route = guildId
-    ? Routes.applicationGuildCommands(config.clientId, guildId)
-    : Routes.applicationCommands(config.clientId);
+    ? Routes.applicationGuildCommands(config.discord.clientId, guildId)
+    : Routes.applicationCommands(config.discord.clientId);
 
   await rest.put(route, { body: [] });
 }

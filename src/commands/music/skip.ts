@@ -1,21 +1,10 @@
-import { SlashCommandBuilder } from 'discord.js';
-import type { SlashCommand } from '../../structures/command.js';
-import { getPlayer } from '../../utils/music.js';
-import { createInfoEmbed } from '../../utils/embeds.js';
+import { createSimpleMusicCommand } from "./shared.js";
 
-export const command: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('skip')
-    .setDescription('Skip the current track'),
-  async execute(interaction) {
-    const player = getPlayer(interaction.guildId!);
-    const result = player.skip();
-
-    await interaction.reply({
-      embeds: [createInfoEmbed({
-        title: '🎵 Track Skipped',
-        description: result,
-      })],
-    });
-  },
-};
+export const command = createSimpleMusicCommand({
+  name: "skip",
+  description: "Skip the current track",
+  execute: (player) => ({
+    title: "🎵 Track Skipped",
+    description: player.skip(),
+  }),
+});

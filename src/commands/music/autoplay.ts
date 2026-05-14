@@ -5,18 +5,8 @@ import { createInfoEmbed, createErrorEmbed } from '../../utils/embeds.js';
 
 export const command: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('loop')
-    .setDescription('Set the loop mode for music playback')
-    .addStringOption(option =>
-      option
-        .setName('mode')
-        .setDescription('Loop mode to set')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Off', value: 'off' },
-          { name: 'Track', value: 'track' },
-          { name: 'Queue', value: 'queue' },
-        )),
+    .setName('autoplay')
+    .setDescription('Toggle autoplay mode for the queue'),
   async execute(interaction) {
     if (!interaction.guildId) {
       await interaction.reply({
@@ -26,22 +16,24 @@ export const command: SlashCommand = {
       return;
     }
 
-    const mode = interaction.options.getString('mode', true) as 'off' | 'track' | 'queue' | 'autoplay';
     const player = getPlayer(interaction.guildId);
-
-    const result = player.setLoopMode(mode);
+    
+    const currentMode = player.getLoopMode();
+    const newMode = currentMode === 'autoplay' ? 'off' : 'autoplay';
+    
+    const result = player.setLoopMode(newMode);
 
     if (result.includes('No queue available')) {
       await interaction.reply({
         embeds: [createErrorEmbed('No Queue', result)],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
     await interaction.reply({
       embeds: [createInfoEmbed({
-        title: '🎵 Loop Mode Updated',
+        title: '🎵 Autoplay Toggled',
         description: result,
       })],
     });

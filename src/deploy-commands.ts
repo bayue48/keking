@@ -1,7 +1,7 @@
-import { config } from "./config.js";
+import { config } from "./config/config.js";
 import { deployCommands, formatDeployReport } from "./utils/deploy-commands.js";
 
-const resolvedGuildId = config.guildId ? config.guildId : null;
+const resolvedGuildId = config.startup.deployGuildId;
 let deployResult = { count: 0, skipped: false, hash: "", commandNames: [] as string[] };
 
 try {

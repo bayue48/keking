@@ -1,5 +1,4 @@
 import { Events, MessageFlags, PermissionFlagsBits, type Message } from "discord.js";
-
 import type { BotEvent } from "../structures/event.js";
 import { extractSocialMirrorLinks } from "../utils/social-preview.js";
 import {

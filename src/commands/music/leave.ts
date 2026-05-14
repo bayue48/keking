@@ -1,21 +1,13 @@
-import { SlashCommandBuilder } from 'discord.js';
-import type { SlashCommand } from '../../structures/command.js';
-import { getPlayer } from '../../utils/music.js';
-import { createInfoEmbed } from '../../utils/embeds.js';
+import { createSimpleMusicCommand } from "./shared.js";
 
-export const command: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('leave')
-    .setDescription('Leave the voice channel'),
-  async execute(interaction) {
-    const player = getPlayer(interaction.guildId!);
+export const command = createSimpleMusicCommand({
+  name: "leave",
+  description: "Leave the voice channel",
+  execute: (player) => {
     player.disconnect();
-
-    await interaction.reply({
-      embeds: [createInfoEmbed({
-        title: '🎵 Left Voice Channel',
-        description: 'The bot has left the voice channel.',
-      })],
-    });
+    return {
+      title: "🎵 Left Voice Channel",
+      description: "The bot has left the voice channel.",
+    };
   },
-};
+});

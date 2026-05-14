@@ -6,10 +6,26 @@ import { Client } from "discord.js";
 import { TTSExtractor } from "discord-player-tts";
 import { registerMusicEvents } from "./music-events.js";
 import { Client as GeniusClient } from "genius-lyrics";
-import { config } from "../config.js";
+import { config } from "../config/config.js";
 import { assertBotCanJoinVoice } from "./permissions.js";
 
-// Initialize discord-player
+const LEAVE_ON_END_COOLDOWN_MS = 300_000;
+const DEFAULT_TTS_LANGUAGE = "en";
+
+type QueueMetadata = {
+  guildId: string;
+  textChannelId: string | null;
+};
+
+export type NowPlayingDetails = {
+  track: string;
+  duration: string;
+  queueSize: number;
+  progressBar: string;
+  thumbnail: string | null;
+  url: string | null;
+};
+
 let player: Player | null = null;
 
 export async function initializePlayer(client: Client): Promise<Player> {
@@ -17,15 +33,15 @@ export async function initializePlayer(client: Client): Promise<Player> {
     player = new Player(client as any);
     await player.extractors.loadMulti(DefaultExtractors);
     await player.extractors.register(YoutubeExtractor, {
-      cookie: config.ytCookies,
+      cookie: config.music.youtubeCookies,
     });
     await player.extractors.register(SpotifyExtractor, {
-      clientId: config.spotifyClientId,
-      clientSecret: config.spotifyClientSecret,
+      clientId: config.music.spotifyClientId,
+      clientSecret: config.music.spotifyClientSecret,
     });
     await player.extractors.register(TTSExtractor, {
-      language: "en",
-      slow: false
+      language: DEFAULT_TTS_LANGUAGE,
+      slow: false,
     });
 
     await registerMusicEvents(player, client);
@@ -56,18 +72,15 @@ export class MusicPlayer {
   }
 
   async play(urlOrQuery: string): Promise<string> {
-    if (!this.activeChannel) return "Not connected to a voice channel.";
+    const activeChannel = this.activeChannel;
+    if (!activeChannel) return "Not connected to a voice channel.";
 
     try {
       const normalizedQuery = this.normalizeQuery(urlOrQuery);
       const isDirectLink = this.isDirectLink(normalizedQuery);
-      const result = await this.discordPlayer.play(this.activeChannel as any, normalizedQuery, {
+      const result = await this.discordPlayer.play(activeChannel as any, normalizedQuery, {
         searchEngine: isDirectLink ? QueryType.AUTO : QueryType.YOUTUBE_SEARCH,
-        nodeOptions: {
-          leaveOnEnd: true,
-          leaveOnEndCooldown: 300_000,
-          metadata: { guildId: this.guildId, textChannelId: this.textChannelId },
-        },
+        nodeOptions: this.createNodeOptions(),
       });
       this.logVoiceConnectionState("play");
 
@@ -123,7 +136,7 @@ export class MusicPlayer {
   }
 
   skip(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (queue?.node.skip()) {
       return "Skipped current track.";
     }
@@ -131,7 +144,7 @@ export class MusicPlayer {
   }
 
   pause(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No music is currently playing.";
 
     if (queue.node.pause()) {
@@ -141,7 +154,7 @@ export class MusicPlayer {
   }
 
   resume(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No music is currently playing.";
 
     if (queue.node.resume()) {
@@ -150,8 +163,15 @@ export class MusicPlayer {
     return "Music is already playing.";
   }
 
+  togglePause(): string {
+    const queue = this.getQueueNode();
+    if (!queue) return "No music is currently playing.";
+
+    return queue.node.isPaused() ? this.resume() : this.pause();
+  }
+
   stop(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (queue) {
       queue.delete();
     }
@@ -160,19 +180,23 @@ export class MusicPlayer {
   }
 
   getQueue(): string[] {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return [];
     return queue.tracks.toArray().map((track: Track) => `${track.title} by ${track.author}`);
   }
 
   getCurrentTrack(): string | null {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue?.currentTrack) return null;
     return `${queue.currentTrack.title} by ${queue.currentTrack.author}`;
   }
 
-  getNowPlayingDetails(): { track: string; duration: string; queueSize: number; progressBar: string; thumbnail: string | null; url: string | null } | null {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+  hasCurrentTrack(): boolean {
+    return this.getQueueNode()?.currentTrack != null;
+  }
+
+  getNowPlayingDetails(): NowPlayingDetails | null {
+    const queue = this.getQueueNode();
     if (!queue?.currentTrack) return null;
 
     const durationMs = queue.currentTrack.durationMS || 0;
@@ -197,7 +221,7 @@ export class MusicPlayer {
   }
 
   removeTrack(index: number): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No queue available.";
 
     const tracks = queue.tracks.toArray();
@@ -214,7 +238,7 @@ export class MusicPlayer {
   }
 
   clearQueue(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No queue available.";
 
     const size = queue.tracks.size;
@@ -223,7 +247,7 @@ export class MusicPlayer {
   }
 
   shuffle(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No queue available.";
 
     if (queue.tracks.size < 2) {
@@ -235,7 +259,7 @@ export class MusicPlayer {
   }
 
   setLoopMode(mode: 'off' | 'track' | 'queue' | 'autoplay'): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No queue available.";
 
     switch (mode) {
@@ -248,16 +272,13 @@ export class MusicPlayer {
       case 'queue':
         queue.setRepeatMode(QueueRepeatMode.QUEUE);
         return "Now looping entire queue.";
-      case 'autoplay':
-        queue.setRepeatMode(QueueRepeatMode.AUTOPLAY);
-        return "Autoplay enabled - will add similar tracks when queue ends.";
       default:
         return "Invalid loop mode.";
     }
   }
 
   getLoopMode(): string {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (!queue) return "No queue available.";
 
     const mode = queue.repeatMode;
@@ -315,26 +336,12 @@ export class MusicPlayer {
   }
 
   async playTrack(track: Track): Promise<string> {
-    if (!this.activeChannel) return "Not connected to a voice channel.";
+    const activeChannel = this.activeChannel;
+    if (!activeChannel) return "Not connected to a voice channel.";
 
     try {
-      const existingQueue = this.discordPlayer.nodes.get(this.guildId);
-      const wasPlaying = existingQueue?.isPlaying() ?? false;
-      const queue = this.discordPlayer.nodes.get(this.guildId) ||
-        this.discordPlayer.nodes.create(this.guildId, {
-          metadata: { guildId: this.guildId, textChannelId: this.textChannelId },
-          leaveOnEnd: true,
-          leaveOnEndCooldown: 300_000,
-        });
-
-      if (this.textChannelId) {
-        queue.metadata = { ...queue.metadata, guildId: this.guildId, textChannelId: this.textChannelId };
-      }
-
-      if (!queue.connection) {
-        await queue.connect(this.activeChannel as any);
-        this.logVoiceConnectionState("playTrack.connect");
-      }
+      const queue = this.ensureQueue();
+      await this.connectQueueIfNeeded(queue, activeChannel, "playTrack.connect");
 
       queue.addTrack(track);
 
@@ -351,16 +358,13 @@ export class MusicPlayer {
   }
 
   async playTTS(text: string): Promise<string> {
-    if (!this.activeChannel) return "Not connected to a voice channel.";
+    const activeChannel = this.activeChannel;
+    if (!activeChannel) return "Not connected to a voice channel.";
     if (!text || text.trim().length === 0) return "Please provide text to convert to speech.";
 
     try {
-      await this.discordPlayer.play(this.activeChannel as any, `tts:${text}`, {
-        nodeOptions: {
-          leaveOnEnd: true,
-          leaveOnEndCooldown: 300_000,
-          metadata: { guildId: this.guildId, textChannelId: this.textChannelId },
-        },
+      await this.discordPlayer.play(activeChannel as any, `tts:${text}`, {
+        nodeOptions: this.createNodeOptions(),
       });
       this.logVoiceConnectionState("playTTS");
 
@@ -372,18 +376,84 @@ export class MusicPlayer {
   }
 
   disconnect(): void {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     if (queue) {
       queue.delete();
     }
     this.activeChannel = null;
   }
 
+  toggleFilter(filterName: string): string {
+    const queue = this.getQueueNode();
+    if (!queue) return "No queue available.";
+
+    const filters = queue.filters.ffmpeg;
+    if (!filters) return "Filters are not ready.";
+
+    try {
+      filters.toggle(filterName as any);
+      return `Toggled filter: ${filterName}`;
+    } catch (e) {
+      return `Failed to toggle filter: ${filterName}`;
+    }
+  }
+
+  getFilters(): string[] {
+    const queue = this.getQueueNode();
+    if (!queue) return [];
+
+    const filters = queue.filters.ffmpeg;
+    if (!filters) return [];
+
+    return filters.getFiltersEnabled();
+  }
+
   private logVoiceConnectionState(context: string): void {
-    const queue = this.discordPlayer.nodes.get(this.guildId);
+    const queue = this.getQueueNode();
     const status = queue?.connection?.state?.status ?? "no-connection";
     const channelId = this.activeChannel?.id ?? "none";
     console.log(`[voice:${context}] guild=${this.guildId} channel=${channelId} status=${status}`);
+  }
+
+  private createNodeOptions() {
+    return {
+      leaveOnEnd: true,
+      leaveOnEndCooldown: LEAVE_ON_END_COOLDOWN_MS,
+      metadata: this.createQueueMetadata(),
+    };
+  }
+
+  private createQueueMetadata(): QueueMetadata {
+    return {
+      guildId: this.guildId,
+      textChannelId: this.textChannelId,
+    };
+  }
+
+  private ensureQueue() {
+    const existingQueue = this.getQueueNode();
+    if (existingQueue) {
+      existingQueue.metadata = {
+        ...existingQueue.metadata,
+        ...this.createQueueMetadata(),
+      };
+      return existingQueue;
+    }
+
+    return this.discordPlayer.nodes.create(this.guildId, this.createNodeOptions());
+  }
+
+  private async connectQueueIfNeeded(queue: NonNullable<ReturnType<MusicPlayer["getQueueNode"]>>, channel: VoiceBasedChannel, context: string): Promise<void> {
+    if (queue.connection) {
+      return;
+    }
+
+    await queue.connect(channel as any);
+    this.logVoiceConnectionState(context);
+  }
+
+  private getQueueNode() {
+    return this.discordPlayer.nodes.get(this.guildId);
   }
 }
 

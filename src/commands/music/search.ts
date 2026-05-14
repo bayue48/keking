@@ -1,8 +1,8 @@
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import type { SlashCommand } from '../../structures/command.js';
-import { getPlayer } from '../../utils/music.js';
 import { createErrorEmbed, createInfoEmbed } from '../../utils/embeds.js';
 import { MissingBotPermissionsError, createMissingPermissionsReply } from '../../utils/permissions.js';
+import { preparePlaybackContext } from './playback-context.js';
 
 export const command: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -16,27 +16,12 @@ export const command: SlashCommand = {
     ),
   async execute(interaction) {
     const query = interaction.options.getString('query')!;
-    const member = await interaction.guild?.members.fetch(interaction.user.id);
-
-    if (!member?.voice.channel) {
-      await interaction.reply({
-        embeds: [createErrorEmbed('Voice Channel Required', 'You must be in a voice channel to play music.')],
-        flags: MessageFlags.Ephemeral,
-      });
+    const playback = await preparePlaybackContext(interaction);
+    if (!playback) {
       return;
     }
 
-    const player = getPlayer(interaction.guildId!);
-    player.setTextChannel(interaction.channelId);
-
-    const joined = await player.joinChannel(member);
-    if (!joined) {
-      await interaction.reply({
-        embeds: [createErrorEmbed('Failed to Join', 'Could not join the voice channel.')],
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
+    const { player } = playback;
 
     await interaction.deferReply();
 
@@ -102,35 +87,23 @@ export const command: SlashCommand = {
       }
 
       try {
-        const currentMember = await interaction.guild?.members.fetch(interaction.user.id);
-        if (!currentMember?.voice.channel) {
+        const refreshedPlayback = await preparePlaybackContext(interaction);
+        if (!refreshedPlayback) {
           await buttonInteraction.reply({
-            embeds: [createErrorEmbed('Voice Channel Required', 'You must be in a voice channel to play music.')],
+            embeds: [createErrorEmbed('Playback Unavailable', 'The playback session is no longer ready.')],
             flags: MessageFlags.Ephemeral,
           });
           return;
         }
 
-        const rejoined = await player.joinChannel(currentMember);
-        if (!rejoined) {
-          await buttonInteraction.reply({
-            embeds: [createErrorEmbed('Failed to Join', 'Could not join the voice channel.')],
-            flags: MessageFlags.Ephemeral,
-          });
-          return;
-        }
+        const hadCurrentTrack = player.hasCurrentTrack();
 
         await buttonInteraction.deferUpdate();
         const result = await player.playTrack(selected);
-        let title = '🎵 Added to Queue';
-
-        if (player.getQueue().length === 0) {
-          title = '🎵 Started Playing';
-        }
 
         await interaction.editReply({
           embeds: [createInfoEmbed({
-            title: title,
+            title: hadCurrentTrack ? '🎵 Added to Queue' : '🎵 Started Playing',
             description: result,
           })],
           components: [],

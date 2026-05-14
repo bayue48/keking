@@ -1,5 +1,4 @@
 import { MessageFlags, SlashCommandBuilder, type InteractionReplyOptions } from "discord.js";
-
 import type { SlashCommand } from "../../structures/command.js";
 import { createErrorEmbed, createInfoEmbed } from "../../utils/embeds.js";
 
