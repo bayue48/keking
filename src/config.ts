@@ -19,4 +19,5 @@ export const config = {
   spotifyClientId: process.env.SPOTIFY_CLIENT_ID || '',
   spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET || '',
   facebookScraperDomain: process.env.FACEBOOK_SCRAPER_DOMAIN || "xfa.gsdm.site",
+  botOwnerId: process.env.BOT_OWNER_ID || "330320305606230016",
 };

@@ -82,21 +82,21 @@ export function extractSocialMirrorLinks(content: string): string[] {
     links.set(`${normalizedKind}/${shortcode}`, normalizeInstagramUrl(normalizedKind, shortcode));
   }
 
-  for (const match of content.matchAll(REDDIT_URL_PATTERN)) {
-    const rawUrl = match[0];
+  // for (const match of content.matchAll(REDDIT_URL_PATTERN)) {
+  //   const rawUrl = match[0];
 
-    if (!rawUrl) {
-      continue;
-    }
+  //   if (!rawUrl) {
+  //     continue;
+  //   }
 
-    const normalizedUrl = normalizeRedditUrl(rawUrl);
+  //   const normalizedUrl = normalizeRedditUrl(rawUrl);
 
-    if (!normalizedUrl) {
-      continue;
-    }
+  //   if (!normalizedUrl) {
+  //     continue;
+  //   }
 
-    links.set(normalizedUrl, normalizedUrl);
-  }
+  //   links.set(normalizedUrl, normalizedUrl);
+  // }
 
   for (const match of content.matchAll(FACEBOOK_URL_PATTERN)) {
     const rawUrl = match[0];

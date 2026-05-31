@@ -7,6 +7,8 @@ import {
   assertBotHasChannelPermissions,
   createMissingPermissionsMessage,
 } from "../utils/permissions.js";
+import { isSocialPreviewEnabled } from "../db/postgres.js";
+import { config } from "../config.js";
 
 const mentionReplies = [
   "iya beb",
@@ -23,7 +25,7 @@ async function handleMentionReply(message: Message): Promise<boolean> {
   const botId = message.client.user?.id;
   const authorId = message.author.id;
 
-  if (!botId || authorId !== "330320305606230016") {
+  if (!botId || authorId !== config.botOwnerId) {
     return false;
   }
 
@@ -46,6 +48,17 @@ async function handleMentionReply(message: Message): Promise<boolean> {
 
 async function previewSocialLinks(message: Message): Promise<void> {
   if (!message.inGuild() || message.author.bot) {
+    return;
+  }
+
+  // Fail-secure: If database query fails, we default to disabled (no previews)
+  try {
+    const isEnabled = await isSocialPreviewEnabled(message.guild.id);
+    if (!isEnabled) {
+      return;
+    }
+  } catch (error) {
+    console.error("[SOCIAL PREVIEW] Failed to check database setting (failing secure):", error);
     return;
   }
 
